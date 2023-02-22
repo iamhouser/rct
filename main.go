@@ -15,9 +15,11 @@ func main() {
 
 	var url string
 	var threads int
+	var token string
 
 	flag.StringVar(&url, "u", "", "request for pushing")
 	flag.IntVar(&threads, "t", 10, "amount of threads")
+	flag.StringVar(&token, "h", "", "Authorization token")
 
 	flag.Parse()
 
@@ -27,7 +29,7 @@ func main() {
 
 	for i := 0; i < threads; i++ {
 
-		go makeRequest(url)
+		go makeRequest(url, token)
 		wg.Add(1) // tell 1 gourutine checking a status of another gourutine
 
 	}
@@ -43,15 +45,23 @@ func main() {
 
 }
 
-func makeRequest(url string) {
+func makeRequest(url string, token string) {
 
 	defer wg.Done() //this guy will send info for (wg.Add(1)) about status each gourutine
 
-	resp, err := http.Get(url)
-	resp.Header.Set("Authorisation", "Bearer")
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	res, _ := client.Do(req)
+
+	req.Header = http.Header {
+		
+		"Authorization": {token},
+		"Content": {"application/json"},
+
+	}
 	if err != nil {
 		log.Fatalln()
 	} 
 
-	fmt.Println("Response code of request: ", resp.StatusCode)
+	fmt.Println("Response code of request: ", res.StatusCode)
 }
