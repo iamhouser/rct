@@ -11,6 +11,8 @@ import (
 
 var wg sync.WaitGroup //global var for using a waitGroup
 
+var amountCodes = make([]int, 0)
+
 func main() {
 
 	var url string
@@ -37,10 +39,23 @@ func main() {
 	wg.Wait() // this guy waiting when a guy above tell us that everything done
 	elapsed := time.Since(start)
 
+	result := make(map[int]int)
+
+	for _, value := range amountCodes {
+		result[value]++
+	}
+
+
+
 	fmt.Println("------------------------------------")
 
 	fmt.Println("Target:", url)
 	fmt.Println("Amount of requests:", threads)
+
+	for keys, value := range result {
+		fmt.Printf("Requests with code %d: %d\n", keys, value)
+	}
+
 	fmt.Println("Program execuded for:", elapsed)
 
 }
@@ -49,19 +64,15 @@ func makeRequest(url string, token string) {
 
 	defer wg.Done() //this guy will send info for (wg.Add(1)) about status each gourutine
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
-	res, _ := client.Do(req)
+	req, err := http.Get(url)
 
-	req.Header = http.Header {
-		
-		"Authorization": {token},
-		"Content": {"application/json"},
-
-	}
 	if err != nil {
 		log.Fatalln()
 	} 
 
-	fmt.Println("Response code of request: ", res.StatusCode)
+	amountCodes = append(amountCodes, req.StatusCode)
+
+	fmt.Println("Response code of request: ", req.StatusCode)
+
+
 }
